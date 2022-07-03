@@ -24,11 +24,14 @@ import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
 import { Button } from "@material-ui/core";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteCategory, getCategory } from "../../redux/action/category.action";
 
 const Category = () => {
-  const auth = useSelector(state => state.auth)
 
+  const auth = useSelector(state => state.auth)
+  const categories = useSelector(state => state.categories)
+  const dispatch = useDispatch()
   const classes = productStyle();
   const [filters, setFilters] = useState(defaultFilter);
   const [categoryRecords, setCategoryRecords] = useState([]);
@@ -44,12 +47,13 @@ const Category = () => {
     searchAllCategories();
   }, [filters]);
 
+  useEffect(() => {
+    if(categories) setCategoryRecords(categories.categories)
+  })
+
   const searchAllCategories = () => {
-    // categoryService.getAll(filters).then((res) => {
-    //   if (res && res.code === StatusCode.Success) {
-    //     setCategoryRecords(res.data);
-    //   }
-    // });
+    dispatch(getCategory())
+    if(categories) setCategoryRecords(categories.categories)
   };
 
   const columns = [
@@ -58,17 +62,15 @@ const Category = () => {
   ];
 
   const onConfirmDelete = () => {
-    // categoryService.delete(selectedId).then((res) => {
-    //   if (res && res.code === StatusCode.Success) {
-    //     toast.success(res.message);
-    //     setOpen(false);
-    //     setFilters({ ...filters, page: 1 });
-    //   }
-    // });
+    dispatch(deleteCategory({_id:selectedId}))
+    setOpen(false);
+
   };
+
   if(!auth.authenticated){
     return <Navigate to = {'/login'} />
   }
+
   return (
     <div className={classes.productWrapper}>
       <div className="container">
@@ -112,7 +114,7 @@ const Category = () => {
             </TableHead>
             <TableBody>
               {categoryRecords?.map((row, index) => (
-                <TableRow key={row.id}>
+                <TableRow key={row._id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{row.name}</TableCell>
                   <TableCell>
@@ -123,7 +125,7 @@ const Category = () => {
                       color="primary"
                       disableElevation
                       onClick={() => {
-                        history(`/edit-category/${row.id}`);
+                        history(`/edit-category/${row._id}`);
                       }}
                     >
                       Edit
@@ -136,7 +138,7 @@ const Category = () => {
                       disableElevation
                       onClick={() => {
                         setOpen(true);
-                        setSelectedId(row.id ?? 0);
+                        setSelectedId(row._id ?? 0);
                       }}
                     >
                       Delete

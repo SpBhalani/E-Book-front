@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import './assets/css/style.css';
 import { ThemeProvider } from "@material-ui/core/styles";
 import { theme } from './utils/theme';
@@ -16,7 +16,20 @@ import { BookList } from './pages/book-listing'
 import { EditCategory } from './pages/category/editCategory/index'
 import { EditUser } from './pages/user/editUser/index'
 import { EditBook } from './pages/book/editBook/index'
+import Cart from "./pages/cart";
+import { useDispatch, useSelector } from "react-redux";
+import { getCart } from "./redux/action/cart.action";
 function App() {
+  const auth = useSelector(state => state.auth)
+  const dispatch = useDispatch()
+  useEffect(()=>{
+    if(auth) {
+      dispatch(getCart({
+        userId:auth.user._id
+      }))
+    }
+  }, [])
+
   return (
     <ThemeProvider theme={theme}>
       <React.Suspense fallback={<></>}>
@@ -36,6 +49,8 @@ function App() {
                 <Route exact path="/book" element={<Book/>} />
                 <Route exact path="/edit-book/:id" element={<EditBook/>} />
                 <Route exact path="/add-book" element={<EditBook/>} />
+                <Route exact path="/cart" element={<Cart/>} />
+                <Route exact path="/update-profile" element={<EditBook/>} />
               </Routes>
             </main>
             <Footer />

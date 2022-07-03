@@ -8,7 +8,7 @@ import {
   RecordsPerPage,
   StatusCode,
 } from '../../utils/constant';
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import {
   Typography,
   Dialog,
@@ -37,6 +37,7 @@ import { deleteUser, userData } from "../../redux/action/userData.actions";
 export const User = (props) => {
   const dispatch = useDispatch();
   const users = useSelector(state => state.allUser)
+  const auth = useSelector(state => state.auth)
   const classes = productStyle();
   const [filters, setFilters] = useState(defaultFilter);
   const [userRecords, setUserRecords] = useState([]);
@@ -46,13 +47,13 @@ export const User = (props) => {
   const history = useNavigate();
   useEffect(() => {
     searchAllUsers();
-  },[]); 
+  }, []);
   useEffect(() => {
-    if(users) setUserRecords(users.user);
+    if (users) setUserRecords(users.user);
   })
   const searchAllUsers = () => {
     dispatch(userData());
-    if(users) setUserRecords(users.user);
+    if (users) setUserRecords(users.user);
   };
 
   const columns = [
@@ -64,82 +65,88 @@ export const User = (props) => {
   ];
 
   const onConfirmDelete = () => {
-    dispatch(deleteUser({_id:selectedId}))
+    dispatch(deleteUser({ _id: selectedId }))
     setOpen(false);
   };
-  return(
+
+  if (!auth.authenticated) {
+    return <Navigate to={'/login'} />
+  }
+
+  return (
     <div className={classes.productWrapper}>
-    <div className="container">
-      <Typography variant="h1">User</Typography>
-      <div className="btn-wrapper">
-        <TextField
-          id="text"
-          name="text"
-          placeholder="Search..."
-          variant="outlined"
-          inputProps={{ className: "small" }}
-          onChange={(e) => {
-            setFilters({ ...filters, keyword: e.target.value, page: 1 });
-          }}
-        /> 
-      </div>
-      <TableContainer>
-        <Table aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  style={{ minWidth: column.minWidth }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-              <TableCell></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {userRecords?.map((row, index) => {
-              return (
-              <TableRow key={index}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{row.firstname}</TableCell>
-                <TableCell>{row.lastname}</TableCell>
-                <TableCell>{row.email}</TableCell>
-                <TableCell>{row.roleid}</TableCell>
-                <TableCell>
-                  <Button
-                    type="button"
-                    className="green-btn btn"
-                    variant="contained"
-                    color="primary"
-                    disableElevation
-                    onClick={() => {
-                      history(`/edit-user/${row._id}`);
-                    }}
+      <div className="container">
+        <Typography variant="h1">User</Typography>
+        <div className="btn-wrapper">
+          <TextField
+            id="text"
+            name="text"
+            placeholder="Search..."
+            variant="outlined"
+            inputProps={{ className: "small" }}
+            onChange={(e) => {
+              setFilters({ ...filters, keyword: e.target.value, page: 1 });
+            }}
+          />
+        </div>
+        <TableContainer>
+          <Table aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.id}
+                    style={{ minWidth: column.minWidth }}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    className="btn pink-btn"
-                    variant="contained"
-                    color="primary"
-                    disableElevation
-                    onClick={() => {
-                      setOpen(true);
-                      setSelectedId(row._id ?? 0);
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
+                    {column.label}
+                  </TableCell>
+                ))}
+                <TableCell></TableCell>
               </TableRow>
-            )})}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      {/* <TablePagination
+            </TableHead>
+            <TableBody>
+              {userRecords?.map((row, index) => {
+                return (
+                  <TableRow key={index}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{row.firstname}</TableCell>
+                    <TableCell>{row.lastname}</TableCell>
+                    <TableCell>{row.email}</TableCell>
+                    <TableCell>{row.roleid}</TableCell>
+                    <TableCell>
+                      <Button
+                        type="button"
+                        className="green-btn btn"
+                        variant="contained"
+                        color="primary"
+                        disableElevation
+                        onClick={() => {
+                          history(`/edit-user/${row._id}`);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        type="button"
+                        className="btn pink-btn"
+                        variant="contained"
+                        color="primary"
+                        disableElevation
+                        onClick={() => {
+                          setOpen(true);
+                          setSelectedId(row._id ?? 0);
+                        }}
+                      > 
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        {/* <TablePagination
         rowsPerPageOptions={RecordsPerPage}
         component="div"
         count={userRecords?.length ? userRecords.length : 0}
@@ -152,39 +159,39 @@ export const User = (props) => {
           setFilters({ ...filters, page: 0, pageSize:parseInt(e.target.value, 10) });
         }}
       /> */}
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-        className="cancel-popup"
-      >
-        <DialogTitle id="alert-dialog-title">Delete user</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete this user?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="btn pink-btn"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              onConfirmDelete();
-            }}
-            autoFocus
-            className="btn green-btn"
-          >
-            Ok
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </div>
-  </div>   )
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+          className="cancel-popup"
+        >
+          <DialogTitle id="alert-dialog-title">Delete user</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Are you sure you want to delete this user?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="btn pink-btn"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                onConfirmDelete();
+              }}
+              autoFocus
+              className="btn green-btn"
+            >
+              Ok
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    </div>)
 
- }
+}

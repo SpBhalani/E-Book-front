@@ -7,7 +7,6 @@ export const signin = (user) => {
             dispatch({
                 type : signinConstant.SIGNIN_REQUEST
             })
-            console.log(user);
             const {email , password} = user;
             const res = await axiosInstance.post('/signin',{email,password} );
             const _user = {

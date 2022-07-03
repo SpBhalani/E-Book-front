@@ -18,7 +18,10 @@ import {
     TextField,
     Button,
 } from "@material-ui/core";
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCart } from '../../redux/action/cart.action';
+import { getBook } from '../../redux/action/book.action';
+import { getCategory } from '../../redux/action/category.action';
 
 
 /**
@@ -27,37 +30,31 @@ import { useSelector } from 'react-redux';
 **/
 // Searching Remaining
 
-export const Header = (props) => {
+export const Header = () => {
     const auth = useSelector(state => state.auth)
+    const cartItems = useSelector(state => state.cart.cartItems)
+    const dispatch = useDispatch()
     const classes = headerStyle();
     const [open, setOpen] = useState(false);
     const [searchKeyword, setSearchKeyword] = useState("");
     const [loading, setLoading] = useState(false);
-
+    const [cartCount,setCartCount] = useState(0)
     const openMenu = () => {
         document.body.classList.toggle("open-menu");
     };
-
-    //   const filter = defaultFilter;
-    //   filter.pageSize = 100;
     const [bookRecords, setBookRecords] = useState([]);
-
-    //   const searchAllBooks = () => {
-    //     setLoading(true);
-    //     bookService.getAll(filter).then((res) => {
-    //       if (res && res.code === StatusCode.Success) {
-    //         setBookRecords(res.data);
-    //         setLoading(false);
-    //       }
-    //     });
-    //   };
-
-    // useEffect(() => {
-    //     if (searchKeyword) {
-    //       filter.keyword = searchKeyword;
-    //       searchAllBooks();
-    //     }
-    //   }, [searchKeyword]);
+    useEffect(() => {
+        dispatch(getBook())
+        dispatch(getCategory())
+        
+    },[])
+    useEffect(()=> {
+        let count = 0;
+        cartItems.map(cart => {
+            count += cart.Quantity
+        })
+        setCartCount(count)
+    },[cartItems])
 
     return (
         <div className={classes.headerWrapper}>
@@ -111,87 +108,89 @@ export const Header = (props) => {
 
                                     }
                                     {
-                                        auth.authenticated ? 
-                                        <List className="cart-country-wrap">
-                                        <ListItem className="cart-link">
-                                            <Link to="/" title="Cart">
-                                                <img src={cartIcon} alt="cart.png" />
-                                                <span>0</span>
-                                                Cart
-                                            </Link>
-                                        </ListItem>
-                                        <ListItem className="hamburger" onClick={openMenu}>
-                                            <span></span>
-                                        </ListItem>
-                                    </List> 
-                                    :
-                                    " "
+                                        auth.authenticated ?
+                                            <List className="cart-country-wrap">
+                                                <ListItem className="cart-link">
+                                                    <Link to="/cart" title="Cart">
+                                                        <img src={cartIcon} alt="cart.png" />
+                                                        <span>{cartCount}</span>
+                                                        Cart
+                                                    </Link>
+                                                </ListItem>
+                                                <ListItem className="hamburger" onClick={openMenu}>
+                                                    <span></span>
+                                                </ListItem>
+                                            </List>
+                                            :
+                                            " "
                                     }
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="header-search-wrapper">
-                    <div className="container">
-                        <div className="header-search-outer">
-                            <div className="header-search-inner">
-                                <div className="text-wrapper">
-                                    <TextField
-                                        id="text"
-                                        name="text"
-                                        placeholder="What are you looking for..."
-                                        variant="outlined"
-                                        onChange={(e) => {
-                                            setSearchKeyword(e.target.value?.trim());
-                                        }}
-                                    />
-                                    {searchKeyword && (
-                                        <div className="product-listing">
-                                            {bookRecords?.length ? (
-                                                <>
-                                                    <List className="related-product-list">
-                                                        {bookRecords.map((book) => (
-                                                            <ListItem key={book.id}>
-                                                                <div className="inner-block">
-                                                                    <div className="left-col">
-                                                                        <span className="title">{book.name}</span>
-                                                                        <p>{book.description}</p>
-                                                                    </div>
-                                                                    <div className="right-col">
-                                                                        <span className="price">{book.price}</span>
-                                                                        <Link to="/">Add to cart</Link>
-                                                                    </div>
-                                                                </div>
-                                                            </ListItem>
-                                                        ))}
-                                                    </List>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {loading ? (
-                                                        <p className="loading">Loading....</p>
+                {
+                    auth.authenticated ?
+                        <div className="header-search-wrapper">
+                            <div className="container">
+                                <div className="header-search-outer">
+                                    <div className="header-search-inner">
+                                        <div className="text-wrapper">
+                                            <TextField
+                                                id="text"
+                                                name="text"
+                                                placeholder="What are you looking for..."
+                                                variant="outlined"
+                                                onChange={(e) => {
+                                                    setSearchKeyword(e.target.value?.trim());
+                                                }}
+                                            />
+                                            {searchKeyword && (
+                                                <div className="product-listing">
+                                                    {bookRecords?.length ? (
+                                                        <>
+                                                            <List className="related-product-list">
+                                                                {bookRecords.map((book) => (
+                                                                    <ListItem key={book.id}>
+                                                                        <div className="inner-block">
+                                                                            <div className="left-col">
+                                                                                <span className="title">{book.name}</span>
+                                                                                <p>{book.description}</p>
+                                                                            </div>
+                                                                            <div className="right-col">
+                                                                                <span className="price">{book.price}</span>
+                                                                                <Link to="/">Add to cart</Link>
+                                                                            </div>
+                                                                        </div>
+                                                                    </ListItem>
+                                                                ))}
+                                                            </List>
+                                                        </>
                                                     ) : (
-                                                        <p className="no-product">No product found</p>
+                                                        <>
+                                                            {loading ? (
+                                                                <p className="loading">Loading....</p>
+                                                            ) : (
+                                                                <p className="no-product">No product found</p>
+                                                            )}
+                                                        </>
                                                     )}
-                                                </>
+                                                </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
-                                <Button
-                                    type="submit"
-                                    className="green-btn btn"
-                                    variant="contained"
-                                    color="primary"
-                                    disableElevation
-                                >
-                                    <em>
-                                        <img src={searchIcon} alt="search" />
-                                    </em>
-                                    Search
-                                </Button>
-                                {/* <Button
+                                        <Button
+                                            type="submit"
+                                            className="green-btn btn"
+                                            variant="contained"
+                                            color="primary"
+                                            disableElevation
+                                        >
+                                            <em>
+                                                <img src={searchIcon} alt="search" />
+                                            </em>
+                                            Search
+                                        </Button>
+                                        {/* <Button
                                     type="submit"
                                     className="btn pink-btn"
                                     variant="contained"
@@ -200,10 +199,14 @@ export const Header = (props) => {
                                 >
                                     Cancel
                                 </Button> */}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                        :
+                        null
+
+                }
             </AppBar>
         </div>
     )

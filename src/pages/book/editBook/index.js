@@ -11,7 +11,7 @@ import {
   MenuItem,
   Select,
 } from "@material-ui/core";
-import { useNavigate, useParams , Navigate } from "react-router-dom";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
 // import bookService from "../../../service/book/book.service";
 import { StatusCode } from "../../../utils/constant";
 import { Formik } from "formik";
@@ -19,11 +19,15 @@ import ValidationErrorMessage from "../../../containers/ValidationErrorMessage/V
 import { toast } from "react-toastify";
 import { materialCommonStyles } from "../../../utils/materialCommonStyles";
 // import categoryService from "../../../service/category/category.service";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getCategory } from "../../../redux/action/category.action";
+import { addBook, editBook } from "../../../redux/action/book.action";
 
 const EditBook = () => {
   const auth = useSelector(state => state.auth)
-
+  const books = useSelector(state => state.books.book)
+  const category = useSelector(state => state.categories.categories)
+  const dispatch = useDispatch()
   const materialClasses = materialCommonStyles();
   const [categories, setCategories] = useState([]);
   const [selectedFile, setSelectedFile] = useState([]);
@@ -33,12 +37,12 @@ const EditBook = () => {
     id: 0,
     name: "",
     price: "",
-    category: 0,
-    description: "",
-    imageSrc: "",
+    CategoryId: 0,
+    Description: "",
+    Base64image: "",
   };
   const [initialValueState, setInitialValueState] = useState(initialValues);
-  const { id } = useParams({id});
+  const { id } = useParams();
 
   useEffect(() => {
     if (id) getBookById();
@@ -48,15 +52,18 @@ const EditBook = () => {
     //   }
     // });
   }, [id]);
+  useEffect(() => {
+    dispatch(getCategory())
+    if (category) setCategories(category)
+  }, [])
 
   const validationSchema = Yup.object().shape({
     name: Yup.string().required("Book Name is required"),
-    description: Yup.string().required("Description is required"),
-    category: Yup.number()
-      .min(1, "Category is required")
+    Description: Yup.string().required("Description is required"),
+    CategoryId: Yup.string()
       .required("Category is required"),
     price: Yup.number().required("Price is required"),
-    imageSrc: Yup.string().required("Image is required"),
+    Base64image: Yup.string().required("Image is required"),
   });
 
   const getBookById = () => {
@@ -72,6 +79,11 @@ const EditBook = () => {
     //     });
     //   }
     // });
+    books.map(book => {
+      if (book._id === id) {
+        setInitialValueState(book)
+      }
+    })
   };
 
   const onSubmit = (values) => {
@@ -81,6 +93,30 @@ const EditBook = () => {
     //     history("/book");
     //   }
     // });
+    if (id) {
+      dispatch(editBook({
+        _id: id,
+        name: values.name,
+        price: values.price,
+        category: values.CategoryId,
+        image: values.Base64image,
+        descreption: values.Description,
+        sellerId: auth.user._id
+      }))
+    }
+    else {
+      dispatch(addBook({
+        name: values.name,
+        price: values.price,
+        category: values.CategoryId,
+        image: values.Base64image,
+        descreption: values.Description,
+        sellerId: auth.user._id
+      }))
+    }
+
+    history("/book");
+
   };
 
   const onSelectFile = (e, setFieldValue, setFieldError) => {
@@ -93,7 +129,7 @@ const EditBook = () => {
         const reader = new FileReader();
         reader.readAsDataURL(fileSelected);
         reader.onload = function () {
-          setFieldValue("imageSrc", reader.result);
+          setFieldValue("Base64image", reader.result);
         };
         reader.onerror = function (error) {
           throw error;
@@ -102,11 +138,11 @@ const EditBook = () => {
         toast.error("only jpg,jpeg and png files are allowed");
       }
     } else {
-      setFieldValue("imageSrc", "");
+      setFieldValue("Base64image", "");
     }
   };
-  if(!auth.authenticated){
-    return <Navigate to = {'/login'} />
+  if (!auth.authenticated) {
+    return <Navigate to={'/login'} />
   }
   return (
     <div className={classes.editWrapper}>
@@ -170,30 +206,30 @@ const EditBook = () => {
                   <FormControl className="dropdown-wrapper" variant="outlined">
                     <InputLabel htmlFor="select">Category *</InputLabel>
                     <Select
-                      name={"category"}
-                      id={"category"}
+                      name={"CategoryId"}
+                      id={"CategoryId"}
                       onChange={handleChange}
                       className={materialClasses.customSelect}
                       MenuProps={{
                         classes: { paper: materialClasses.customSelect },
                       }}
-                      value={values.category}
+                      value={values.CategoryId}
                     >
                       {categories?.map((rl) => (
-                        <MenuItem value={rl.value} key={"category" + rl.value}>
-                          {rl.label}
+                        <MenuItem value={rl._id} key={"CategoryId" + rl._id}>
+                          {rl.name}
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                   <ValidationErrorMessage
-                    message={errors.category}
-                    touched={touched.category}
+                    message={errors.CategoryId}
+                    touched={touched.CategoryId}
                   />
                 </div>
                 {/* <img src={values.imageSrc} alt="asa" /> */}
                 <div className="form-col">
-                  {!values.imageSrc && (
+                  {!values.Base64image && (
                     <>
                       {" "}
                       <label
@@ -218,20 +254,20 @@ const EditBook = () => {
                         </Button>
                       </label>
                       <ValidationErrorMessage
-                        message={errors.imageSrc}
-                        touched={touched.imageSrc}
+                        message={errors.Base64image}
+                        touched={touched.Base64image}
                       />
                     </>
                   )}
-                  {values.imageSrc && (
+                  {values.Base64image && (
                     <div className="uploaded-file-name">
                       <em>
-                        <img src={values.imageSrc} alt="" />
+                        <img src={values.Base64image} alt="" />
                       </em>
                       image{" "}
                       <span
                         onClick={() => {
-                          setFieldValue("imageSrc", "");
+                          setFieldValue("Base64image", "");
                         }}
                       >
                         x
@@ -241,18 +277,18 @@ const EditBook = () => {
                 </div>
                 <div className="form-col full-width description">
                   <TextField
-                    id="description"
-                    name="description"
+                    id="Description"
+                    name="Description"
                     label="Description *"
                     variant="outlined"
-                    value={values.description}
+                    value={values.Description}
                     multiline
                     onBlur={handleBlur}
                     onChange={handleChange}
                   />
                   <ValidationErrorMessage
-                    message={errors.description}
-                    touched={touched.description}
+                    message={errors.Description}
+                    touched={touched.Description}
                   />
                 </div>
               </div>
@@ -287,4 +323,4 @@ const EditBook = () => {
   );
 };
 
-export {EditBook};
+export { EditBook };

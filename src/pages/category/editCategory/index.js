@@ -12,17 +12,19 @@ import {
   MenuItem,
   Button,
 } from "@material-ui/core";
-import { useNavigate, useParams  , Navigate} from "react-router-dom";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
 // import categoryService from "../../../service/category/category.service";
 import { StatusCode } from "../../../utils/constant";
 import { Formik } from "formik";
 import ValidationErrorMessage from "../../../containers/ValidationErrorMessage/ValidationErrorMessage";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { addCategory, editCategory } from "../../../redux/action/category.action";
 
 const EditCategory = () => {
   const auth = useSelector(state => state.auth)
-
+  const categories = useSelector(state => state.categories.categories)
+  const dispatch = useDispatch()
   const [roles, setRoles] = useState([]);
   const classes = editStyle();
   const materialClasses = materialCommonStyles();
@@ -32,7 +34,7 @@ const EditCategory = () => {
     name: "",
   };
   const [initialValueState, setInitialValueState] = useState(initialValues);
-  const { id } = useParams({id});
+  const { id } = useParams();
 
   useEffect(() => {
     if (id) getCategoryById();
@@ -43,26 +45,29 @@ const EditCategory = () => {
   });
 
   const getCategoryById = () => {
-    // categoryService.getById(Number(id)).then((res) => {
-    //   if (res && res.code === StatusCode.Success) {
-    //     setInitialValueState({
-    //       id: res.data.id,
-    //       name: res.data.name,
-    //     });
-    //   }
-    // });
+    categories.map(row => {
+      if (row._id === id) {
+        setInitialValueState(row)
+      }
+    })
   };
 
   const onSubmit = (values) => {
     // categoryService.save(values).then((res) => {
     //   if (res && res.code === StatusCode.Success) {
     //     toast.success(res.message);
-    //     history("/category");
-    //   }
+    //   } 
     // });
+    if (id) {
+      dispatch(editCategory({ _id: id, name: values.name }))
+    }
+    else {
+      dispatch(addCategory({ name: values.name }))
+    }
+        history("/category");
   };
-  if(!auth.authenticated){
-    return <Navigate to = {'/login'} />
+  if (!auth.authenticated) {
+    return <Navigate to={'/login'} />
   }
   return (
     <div className={classes.editWrapper}>
@@ -132,4 +137,4 @@ const EditCategory = () => {
   );
 };
 
-export  {EditCategory};
+export { EditCategory };

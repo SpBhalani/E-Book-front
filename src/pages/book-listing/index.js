@@ -12,13 +12,16 @@ import {
 import prodcutImage from "../../assets/images/levis.png";
 import { defaultFilter, StatusCode } from "../../utils/constant";
 // import bookService from "../../service/book/book.service";
-import { Navigate} from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getBook } from "../../redux/action/book.action";
+import { addToCart, getCart } from "../../redux/action/cart.action";
 
 const BookList = () => {
   const auth = useSelector(state => state.auth)
-
+  const books = useSelector(state => state.books.book)
+  const dispatch = useDispatch()
   const classes = productListingStyle();
   const materialClasses = materialCommonStyles();
   const filter = defaultFilter;
@@ -34,14 +37,26 @@ const BookList = () => {
   }, [filters]);
 
   const searchAllBooks = () => {
-    // bookService.getAll(filters).then((res) => {
-    //   if (res && res.code === StatusCode.Success) {
-    //     setBookRecords(res.data);
-    //   }
-    // });
+    dispatch(getCart({
+      userId: auth.user._id
+    }))
+    dispatch(getBook())
+    setBookRecords(books);
   };
-  if(!auth.authenticated){
-    return <Navigate to = {'/login'} />
+
+  const addItemToCart = (book) => {
+    dispatch(addToCart({
+      userId: auth.user._id,
+      cartItems: {
+        bookId: book._id,
+        Quantity: 1,
+        price: book.price
+      }
+    }))
+  }
+
+  if (!auth.authenticated) {
+    return <Navigate to={'/login'} />
   }
   return (
     <div className={classes.productListWrapper}>
@@ -51,7 +66,7 @@ const BookList = () => {
           {bookRecords?.length && (
             <Typography variant="h2">
               Total Records
-              <span> - {bookRecords[0].totalRecords} items</span>
+              <span> - {bookRecords?.length} items</span>
             </Typography>
           )}
           <FormControl className="dropdown-wrapper" variant="outlined">
@@ -70,19 +85,22 @@ const BookList = () => {
         <div className="product-list-wrapper">
           <div className="product-list-inner-wrapper">
             {bookRecords?.map((book) => (
-              <div className="product-list" key={book.id}>
+              <div className="product-list" key={book._id}>
                 <div className="product-list-inner">
                   <em>
-                    <img src={book.base64Image} alt={book.name} />
+                    <img src={book.Base64image} alt={book.name} />
                   </em>
                   <div className="content-wrapper">
                     <Typography variant="h3">{book.name}</Typography>
-                    <p className="description">{book.description}</p>
+                    <p className="description">{book.Description}</p>
                     <p className="price">
                       <span className="discount-price">MRP</span>
                       &#8377; {book.price}
                     </p>
-                    <button className="MuiButtonBase-root MuiButton-root MuiButton-contained btn pink-btn MuiButton-containedPrimary MuiButton-disableElevation">
+                    <button
+                      className="MuiButtonBase-root MuiButton-root MuiButton-contained btn pink-btn MuiButton-containedPrimary MuiButton-disableElevation"
+                      onClick={() => addItemToCart(book)}
+                    >
                       <span className="MuiButton-label">ADD TO CART</span>
                       <span className="MuiTouchRipple-root"></span>
                     </button>
@@ -95,7 +113,7 @@ const BookList = () => {
         {bookRecords?.length && (
           <div className="pagination-wrapper">
             <Pagination
-              count={Math.ceil(bookRecords[0].totalRecords / 12)}
+              count={Math.ceil(bookRecords.length / 12)}
               onChange={(e, page) => {
                 setFilters({ ...filter, page });
               }}
@@ -107,4 +125,4 @@ const BookList = () => {
   );
 };
 
-export  {BookList};
+export { BookList };

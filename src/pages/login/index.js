@@ -44,7 +44,7 @@ export const Login = (props) => {
     dispatch(signin(values))
   };
   if(auth.authenticated){
-    return <Navigate to = {'/user'} />
+    return <Navigate to = {'/'} />
   }
   return(
 <div className={classes.loginWrapper}>

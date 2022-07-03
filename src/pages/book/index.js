@@ -5,13 +5,13 @@ import {
   RecordsPerPage,
   StatusCode,
 } from "../../utils/constant";
-import { useNavigate  , Navigate} from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import {
   Typography,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText, 
+  DialogContentText,
   DialogActions,
   TextField,
 } from "@material-ui/core";
@@ -20,36 +20,46 @@ import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
-import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
 import { Button } from "@material-ui/core";
 // import bookService from "../../service/book/book.service";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteBook, getBook } from "../../redux/action/book.action";
+import { getCategory } from "../../redux/action/category.action";
+import { getCart } from "../../redux/action/cart.action";
 
 const Book = () => {
-  const auth = useSelector(state => state.auth)
+    const auth = useSelector(state => state.auth)
+  const books = useSelector(state => state.books.book)
+  const categories = useSelector(state => state.categories.categories)
+  const dispatch = useDispatch()
   const classes = productStyle();
   const [filters, setFilters] = useState(defaultFilter);
   const [bookRecords, setBookRecords] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(0);
-
   const history = useNavigate();
+
   useEffect(() => {
     searchAllBooks();
   }, []);
+
+  useEffect(() => {
+    if(books) setBookRecords(books);
+  })
 
   useEffect(() => {
     searchAllBooks();
   }, [filters]);
 
   const searchAllBooks = () => {
-    // bookService.getAll(filters).then((res) => {
-    //   if (res && res.code === StatusCode.Success) {
-    //     setBookRecords(res.data);
-    //   }
-    // });
+    dispatch(getBook())
+    dispatch(getCategory())
+    dispatch(getCart({
+      userId:auth.user._id
+    }))
+    if(books) setBookRecords(books);
   };
 
   const columns = [
@@ -60,16 +70,12 @@ const Book = () => {
   ];
 
   const onConfirmDelete = () => {
-    // bookService.delete(selectedId).then((res) => {
-    //   if (res && res.code === StatusCode.Success) {
-    //     toast.success(res.message);
-    //     setOpen(false);
-    //     setFilters({ ...filters, page: 1 });
-    //   }
-    // });
+    dispatch(deleteBook({_id:selectedId}))
+    setOpen(false);
+
   };
-  if(!auth.authenticated){
-    return <Navigate to = {'/login'} />
+  if (!auth.authenticated) {
+    return <Navigate to={'/login'} />
   }
   return (
     <div className={classes.productWrapper}>
@@ -114,11 +120,19 @@ const Book = () => {
             </TableHead>
             <TableBody>
               {bookRecords?.map((row, index) => (
-                <TableRow key={row.id}>
+                <TableRow key={row._id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.price}</TableCell>
-                  <TableCell>{row.category}</TableCell>
+                  <TableCell>
+                    {
+                      categories.map(category => {
+                        if(row.CategoryId === category._id){
+                          return category.name
+                        }
+                      })
+                    }
+                  </TableCell>
                   <TableCell>
                     <Button
                       type="button"
@@ -127,7 +141,7 @@ const Book = () => {
                       color="primary"
                       disableElevation
                       onClick={() => {
-                        history(`/edit-book/${row.id}`);
+                        history(`/edit-book/${row._id}`);
                       }}
                     >
                       Edit
@@ -140,7 +154,7 @@ const Book = () => {
                       disableElevation
                       onClick={() => {
                         setOpen(true);
-                        setSelectedId(row.id ?? 0);
+                        setSelectedId(row._id ?? 0);
                       }}
                     >
                       Delete
@@ -151,19 +165,7 @@ const Book = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={RecordsPerPage}
-          component="div"
-          count={bookRecords?.length ? bookRecords[0].totalRecords : 0}
-          rowsPerPage={filters.pageSize}
-          page={filters.page - 1}
-          onPageChange={(e, newPage) => {
-            setFilters({ ...filters, page: newPage + 1 });
-          }}
-          onRowsPerPageChange={(e) => {
-            setFilters({ ...filters, page: 1, pageSize: +e.target.value });
-          }}
-        />
+        
         <Dialog
           open={open}
           onClose={() => setOpen(false)}
@@ -201,4 +203,4 @@ const Book = () => {
   );
 };
 
-export  {Book};
+export { Book };
