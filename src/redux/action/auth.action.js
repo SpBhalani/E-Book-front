@@ -14,6 +14,7 @@ export const signin = (user) => {
                 firtsname: res.data.user.firstname,
                 lastname: res.data.user.lastname,
                 email: res.data.user.email,
+                role:res.data.user.roleid
             }
             if(res.status === StatusCode.Success ){
                 dispatch({

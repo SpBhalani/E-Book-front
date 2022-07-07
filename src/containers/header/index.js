@@ -19,7 +19,7 @@ import {
     Button,
 } from "@material-ui/core";
 import { useDispatch, useSelector } from 'react-redux';
-import { getCart } from '../../redux/action/cart.action';
+import { getCart, addToCart } from '../../redux/action/cart.action';
 import { getBook } from '../../redux/action/book.action';
 import { getCategory } from '../../redux/action/category.action';
 
@@ -32,13 +32,15 @@ import { getCategory } from '../../redux/action/category.action';
 
 export const Header = () => {
     const auth = useSelector(state => state.auth)
+    const books = useSelector(state => state.books.book)
     const cartItems = useSelector(state => state.cart.cartItems)
     const dispatch = useDispatch()
     const classes = headerStyle();
     const [open, setOpen] = useState(false);
     const [searchKeyword, setSearchKeyword] = useState("");
     const [loading, setLoading] = useState(false);
-    const [cartCount,setCartCount] = useState(0)
+    const [cartCount, setCartCount] = useState(0)
+    const [name, setName] = useState('');
     const openMenu = () => {
         document.body.classList.toggle("open-menu");
     };
@@ -46,16 +48,38 @@ export const Header = () => {
     useEffect(() => {
         dispatch(getBook())
         dispatch(getCategory())
-        
-    },[])
-    useEffect(()=> {
+        setBookRecords(books)
+    }, [])
+    useEffect(() => {
         let count = 0;
         cartItems.map(cart => {
             count += cart.Quantity
         })
         setCartCount(count)
-    },[cartItems])
+    }, [cartItems])
 
+    const filter = (e) => {
+        const keyword = e.target.value;
+        if (keyword !== '') {
+            const result = bookRecords.filter(book => {
+                return book.name.toLowerCase().startsWith(keyword.toLowerCase())
+            })
+            setBookRecords(result)
+        }
+        else {
+            setBookRecords(books)
+        }
+    }
+    const addItemToCart = (book) => {
+        dispatch(addToCart({
+            userId: auth.user._id,
+            cartItems: {
+                bookId: book._id,
+                Quantity: 1,
+                price: book.price
+            }
+        }))
+    }
     return (
         <div className={classes.headerWrapper}>
             <AppBar className='site-header' id="header" position="static">
@@ -89,19 +113,42 @@ export const Header = () => {
                                             </List>
                                             :
                                             <List className="top-nav-bar">
+                                                {
+                                                    auth.user.role === "admin"
+                                                        ?
+                                                        <ListItem>
+                                                            <Link to="/user" title="User">
+                                                                User
+                                                            </Link>
+                                                        </ListItem>
+                                                        :
+                                                        null
+                                                }
+                                                {
+                                                    auth.user.role === "admin"
+                                                        ?
+                                                        <ListItem>
+                                                            <Link to="/category" title="Category">
+                                                                Category
+                                                            </Link>
+                                                        </ListItem>
+                                                        :
+                                                        null
+                                                }
+                                                {
+                                                    auth.user.role === "admin" || auth.user.role === "seller"
+                                                        ?
+                                                        <ListItem>
+                                                            <Link to="/book" title="Category">
+                                                                Book
+                                                            </Link>
+                                                        </ListItem>
+                                                        :
+                                                        null
+                                                }
                                                 <ListItem>
-                                                    <Link to="/user" title="User">
-                                                        User
-                                                    </Link>
-                                                </ListItem>
-                                                <ListItem>
-                                                    <Link to="/category" title="Category">
-                                                        Category
-                                                    </Link>
-                                                </ListItem>
-                                                <ListItem>
-                                                    <Link to="/book" title="Category">
-                                                        Book
+                                                    <Link to="/" title="Home">
+                                                        Home
                                                     </Link>
                                                 </ListItem>
                                             </List>
@@ -141,8 +188,10 @@ export const Header = () => {
                                                 name="text"
                                                 placeholder="What are you looking for..."
                                                 variant="outlined"
-                                                onChange={(e) => {
-                                                    setSearchKeyword(e.target.value?.trim());
+                                                value={searchKeyword}
+                                                onChange={e => {
+                                                    setSearchKeyword(e.target.value)
+                                                    filter(e)
                                                 }}
                                             />
                                             {searchKeyword && (
@@ -151,15 +200,15 @@ export const Header = () => {
                                                         <>
                                                             <List className="related-product-list">
                                                                 {bookRecords.map((book) => (
-                                                                    <ListItem key={book.id}>
+                                                                    <ListItem key={book._id}>
                                                                         <div className="inner-block">
                                                                             <div className="left-col">
                                                                                 <span className="title">{book.name}</span>
-                                                                                <p>{book.description}</p>
+                                                                                <p>{book.Description}</p>
                                                                             </div>
                                                                             <div className="right-col">
                                                                                 <span className="price">{book.price}</span>
-                                                                                <Link to="/">Add to cart</Link>
+                                                                                <Button onClick={() => addItemToCart(book)}>Add to cart</Button>
                                                                             </div>
                                                                         </div>
                                                                     </ListItem>

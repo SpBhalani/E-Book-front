@@ -30,7 +30,7 @@ import { getCategory } from "../../redux/action/category.action";
 import { getCart } from "../../redux/action/cart.action";
 
 const Book = () => {
-    const auth = useSelector(state => state.auth)
+  const auth = useSelector(state => state.auth)
   const books = useSelector(state => state.books.book)
   const categories = useSelector(state => state.categories.categories)
   const dispatch = useDispatch()
@@ -43,11 +43,8 @@ const Book = () => {
 
   useEffect(() => {
     searchAllBooks();
+    if (books) setBookRecords(books);
   }, []);
-
-  useEffect(() => {
-    if(books) setBookRecords(books);
-  })
 
   useEffect(() => {
     searchAllBooks();
@@ -57,9 +54,9 @@ const Book = () => {
     dispatch(getBook())
     dispatch(getCategory())
     dispatch(getCart({
-      userId:auth.user._id
+      userId: auth.user._id
     }))
-    if(books) setBookRecords(books);
+    if (books) setBookRecords(books);
   };
 
   const columns = [
@@ -70,10 +67,24 @@ const Book = () => {
   ];
 
   const onConfirmDelete = () => {
-    dispatch(deleteBook({_id:selectedId}))
+    dispatch(deleteBook({ _id: selectedId }))
     setOpen(false);
-
+    if (books) setBookRecords(books);
   };
+
+  const filter = (e) => {
+    const keyword = e.target.value;
+    if (keyword !== '') {
+      const result = bookRecords.filter(book => {
+        return book.name.toLowerCase().startsWith(keyword.toLowerCase())
+      })
+      setBookRecords(result)
+    }
+    else {
+      setBookRecords(books)
+    }
+  }
+
   if (!auth.authenticated) {
     return <Navigate to={'/login'} />
   }
@@ -88,8 +99,8 @@ const Book = () => {
             placeholder="Search..."
             variant="outlined"
             inputProps={{ className: "small" }}
-            onChange={(e) => {
-              setFilters({ ...filters, keyword: e.target.value, page: 1 });
+            onChange={e => {
+              filter(e)
             }}
           />
           <Button
@@ -103,69 +114,79 @@ const Book = () => {
             Add
           </Button>
         </div>
-        <TableContainer>
-          <Table aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    style={{ minWidth: column.minWidth }}
-                  >
-                    {column.label}
-                  </TableCell>
-                ))}
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {bookRecords?.map((row, index) => (
-                <TableRow key={row._id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.price}</TableCell>
-                  <TableCell>
-                    {
-                      categories.map(category => {
-                        if(row.CategoryId === category._id){
-                          return category.name
+        {
+          bookRecords.length === 0 ?
+            <Typography style={{
+              textAlign: "center",
+              fontSize:"30px"
+            }}>No data Found</Typography>
+            :
+
+            <TableContainer>
+              <Table aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        style={{ minWidth: column.minWidth }}
+                      >
+                        {column.label}
+                      </TableCell>
+                    ))}
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+
+                  {bookRecords?.map((row, index) => (
+                    <TableRow key={row._id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.price}</TableCell>
+                      <TableCell>
+                        {
+                          categories.map(category => {
+                            if (row.CategoryId === category._id) {
+                              return category.name
+                            }
+                          })
                         }
-                      })
-                    }
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      type="button"
-                      className="green-btn btn"
-                      variant="contained"
-                      color="primary"
-                      disableElevation
-                      onClick={() => {
-                        history(`/edit-book/${row._id}`);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      className="btn pink-btn"
-                      variant="contained"
-                      color="primary"
-                      disableElevation
-                      onClick={() => {
-                        setOpen(true);
-                        setSelectedId(row._id ?? 0);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          className="green-btn btn"
+                          variant="contained"
+                          color="primary"
+                          disableElevation
+                          onClick={() => {
+                            history(`/edit-book/${row._id}`)
+                            if (books) setBookRecords(books)
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          className="btn pink-btn"
+                          variant="contained"
+                          color="primary"
+                          disableElevation
+                          onClick={() => {
+                            setOpen(true);
+                            setSelectedId(row._id ?? 0);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+        }
         <Dialog
           open={open}
           onClose={() => setOpen(false)}

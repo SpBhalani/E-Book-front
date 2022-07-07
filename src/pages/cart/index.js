@@ -81,7 +81,7 @@ const Cart = () => {
             <div className={classes.cartWrapper}>
                 <div className="container">
                     <Box
-                        display="flex"
+                        displgay="flex"
                         justifyContent="center"
                         alignItems="center"
 

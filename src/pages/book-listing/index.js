@@ -55,6 +55,27 @@ const BookList = () => {
     }))
   }
 
+  const sortAscending = () => {
+    const tempBook = bookRecords
+    tempBook.sort((a, b) => a.name - b.name)    
+    setBookRecords(tempBook)
+  }
+  const sortDescending = () => {
+    const tempBook = bookRecords
+    tempBook.sort((a, b) => a.name - b.name).reverse()
+    setBookRecords(tempBook)
+    console.log(bookRecords);
+  }
+
+  const handleChange = (e) =>{
+    if(e.target.value === 'a-z'){
+      sortAscending()
+    }
+    else if(e.target.value === 'z-a'){
+      sortDescending()
+    }
+  }
+
   if (!auth.authenticated) {
     return <Navigate to={'/login'} />
   }
@@ -76,8 +97,9 @@ const BookList = () => {
               MenuProps={{
                 classes: { paper: materialClasses.customSelect },
               }}
+              onChange={handleChange}
             >
-              <MenuItem value="a-z">a - z</MenuItem>
+              <MenuItem value="a-z" >a - z</MenuItem>
               <MenuItem value="z-a">z - a</MenuItem>
             </Select>
           </FormControl>

@@ -47,10 +47,8 @@ export const User = (props) => {
   const history = useNavigate();
   useEffect(() => {
     searchAllUsers();
-  }, []);
-  useEffect(() => {
     if (users) setUserRecords(users.user);
-  })
+  }, []);
   const searchAllUsers = () => {
     dispatch(userData());
     if (users) setUserRecords(users.user);
@@ -69,6 +67,19 @@ export const User = (props) => {
     setOpen(false);
   };
 
+  const filter = (e) => {
+    const keyword = e.target.value;
+    if (keyword !== '') {
+      const result = userRecords.filter(_user => {
+        return _user.firstname.toLowerCase().startsWith(keyword.toLowerCase())
+      })
+      setUserRecords(result)
+    }
+    else {
+      setUserRecords(users.user)
+    }
+  }
+
   if (!auth.authenticated) {
     return <Navigate to={'/login'} />
   }
@@ -84,68 +95,76 @@ export const User = (props) => {
             placeholder="Search..."
             variant="outlined"
             inputProps={{ className: "small" }}
-            onChange={(e) => {
-              setFilters({ ...filters, keyword: e.target.value, page: 1 });
+            onChange={e => {
+              filter(e)
             }}
           />
         </div>
-        <TableContainer>
-          <Table aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    style={{ minWidth: column.minWidth }}
-                  >
-                    {column.label}
-                  </TableCell>
-                ))}
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {userRecords?.map((row, index) => {
-                return (
-                  <TableRow key={index}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{row.firstname}</TableCell>
-                    <TableCell>{row.lastname}</TableCell>
-                    <TableCell>{row.email}</TableCell>
-                    <TableCell>{row.roleid}</TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        className="green-btn btn"
-                        variant="contained"
-                        color="primary"
-                        disableElevation
-                        onClick={() => {
-                          history(`/edit-user/${row._id}`);
-                        }}
+        {
+          userRecords.length === 0 ?
+            <Typography style={{
+              textAlign: "center",
+              fontSize: "30px"
+            }}>No data Found</Typography>
+            :
+            <TableContainer>
+              <Table aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        style={{ minWidth: column.minWidth }}
                       >
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        className="btn pink-btn"
-                        variant="contained"
-                        color="primary"
-                        disableElevation
-                        onClick={() => {
-                          setOpen(true);
-                          setSelectedId(row._id ?? 0);
-                        }}
-                      > 
-                        Delete
-                      </Button>
-                    </TableCell>
+                        {column.label}
+                      </TableCell>
+                    ))}
+                    <TableCell></TableCell>
                   </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {userRecords?.map((row, index) => {
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{row.firstname}</TableCell>
+                        <TableCell>{row.lastname}</TableCell>
+                        <TableCell>{row.email}</TableCell>
+                        <TableCell>{row.roleid}</TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            className="green-btn btn"
+                            variant="contained"
+                            color="primary"
+                            disableElevation
+                            onClick={() => {
+                              history(`/edit-user/${row._id}`);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            className="btn pink-btn"
+                            variant="contained"
+                            color="primary"
+                            disableElevation
+                            onClick={() => {
+                              setOpen(true);
+                              setSelectedId(row._id ?? 0);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+        }
         {/* <TablePagination
         rowsPerPageOptions={RecordsPerPage}
         component="div"

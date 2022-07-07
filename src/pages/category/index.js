@@ -5,7 +5,7 @@ import {
   RecordsPerPage,
   StatusCode,
 } from "../../utils/constant";
-import { useNavigate ,Navigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import {
   Typography,
   Dialog,
@@ -41,19 +41,16 @@ const Category = () => {
   const history = useNavigate();
   useEffect(() => {
     searchAllCategories();
+    if (categories) setCategoryRecords(categories.categories)
   }, []);
 
   useEffect(() => {
     searchAllCategories();
   }, [filters]);
 
-  useEffect(() => {
-    if(categories) setCategoryRecords(categories.categories)
-  })
-
   const searchAllCategories = () => {
     dispatch(getCategory())
-    if(categories) setCategoryRecords(categories.categories)
+    if (categories) setCategoryRecords(categories.categories)
   };
 
   const columns = [
@@ -62,13 +59,25 @@ const Category = () => {
   ];
 
   const onConfirmDelete = () => {
-    dispatch(deleteCategory({_id:selectedId}))
+    dispatch(deleteCategory({ _id: selectedId }))
     setOpen(false);
-
   };
 
-  if(!auth.authenticated){
-    return <Navigate to = {'/login'} />
+  const filter = (e) => {
+    const keyword = e.target.value;
+    if (keyword !== '') {
+      const result = categoryRecords.filter(_category => {
+        return _category.name.toLowerCase().startsWith(keyword.toLowerCase())
+      })
+      setCategoryRecords(result)
+    }
+    else {
+      setCategoryRecords(categories.categories)
+    }
+  }
+
+  if (!auth.authenticated) {
+    return <Navigate to={'/login'} />
   }
 
   return (
@@ -82,8 +91,8 @@ const Category = () => {
             placeholder="Search..."
             variant="outlined"
             inputProps={{ className: "small" }}
-            onChange={(e) => {
-              setFilters({ ...filters, keyword: e.target.value, page: 1 });
+            onChange={e => {
+              filter(e)
             }}
           />
           <Button
@@ -97,71 +106,66 @@ const Category = () => {
             Add
           </Button>
         </div>
-        <TableContainer>
-          <Table aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    style={{ minWidth: column.minWidth }}
-                  >
-                    {column.label}
-                  </TableCell>
-                ))}
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {categoryRecords?.map((row, index) => (
-                <TableRow key={row._id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>
-                    <Button
-                      type="button"
-                      className="green-btn btn"
-                      variant="contained"
-                      color="primary"
-                      disableElevation
-                      onClick={() => {
-                        history(`/edit-category/${row._id}`);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      className="btn pink-btn"
-                      variant="contained"
-                      color="primary"
-                      disableElevation
-                      onClick={() => {
-                        setOpen(true);
-                        setSelectedId(row._id ?? 0);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={RecordsPerPage}
-          component="div"
-          count={categoryRecords?.length ? categoryRecords[0].totalRecords : 0}
-          rowsPerPage={filters.pageSize}
-          page={filters.page - 1}
-          onPageChange={(e, newPage) => {
-            setFilters({ ...filters, page: newPage + 1 });
-          }}
-          onRowsPerPageChange={(e) => {
-            setFilters({ ...filters, page: 1, pageSize: +e.target.value });
-          }}
-        />
+        {
+          categoryRecords.length === 0 ?
+            <Typography style={{
+              textAlign: "center",
+              fontSize: "30px"
+            }}>No data Found</Typography>
+            :
+            <TableContainer>
+              <Table aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        style={{ minWidth: column.minWidth }}
+                      >
+                        {column.label}
+                      </TableCell>
+                    ))}
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {categoryRecords?.map((row, index) => (
+                    <TableRow key={row._id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          className="green-btn btn"
+                          variant="contained"
+                          color="primary"
+                          disableElevation
+                          onClick={() => {
+                            history(`/edit-category/${row._id}`);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          className="btn pink-btn"
+                          variant="contained"
+                          color="primary"
+                          disableElevation
+                          onClick={() => {
+                            setOpen(true);
+                            setSelectedId(row._id ?? 0);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+        }
         <Dialog
           open={open}
           onClose={() => setOpen(false)}
@@ -199,4 +203,4 @@ const Category = () => {
   );
 };
 
-export  {Category};
+export { Category };
